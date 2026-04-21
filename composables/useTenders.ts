@@ -178,15 +178,17 @@ export const useTenders = () => {
 
   /**
    * 檢查 API 健康狀態
+   * 注意：FastAPI 的 `/health` 在 **根路徑**，不在 `/api/v1` 下。
+   * `useApi().get` 的 baseURL 為 `/api/v1`，若用 `get('/health')` 會變成 `/api/v1/health` 而 404。
+   * 開發時瀏覽器改走 `$fetch('/health')` 以命中 `nuxt.config` 的 Vite `/health` 代理。
    */
   const checkHealth = async (): Promise<{ status: string }> => {
-    // 健康檢查端點在根路徑
-    const url = import.meta.dev
-      ? '/health'  // 開發環境使用代理
-      : `${apiBaseUrl.replace('/api/v1', '')}/health`  // 生產環境直接訪問
-    
+    const apiRoot = (apiBaseUrl || 'http://localhost:8000/api/v1').replace(/\/api\/v1\/?$/, '').replace(/\/$/, '')
     try {
-      return await get<{ status: string }>(url)
+      if (import.meta.dev && import.meta.client) {
+        return await $fetch<{ status: string }>('/health')
+      }
+      return await $fetch<{ status: string }>(`${apiRoot}/health`)
     } catch (error: any) {
       console.error('健康檢查失敗:', error)
       throw error

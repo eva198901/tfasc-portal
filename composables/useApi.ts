@@ -56,13 +56,17 @@ class ApiClient {
       },
       (error) => {
         // 詳細錯誤日誌
+        const base = error.config?.baseURL ?? ''
+        const path = error.config?.url ?? ''
         console.error('API 請求錯誤:', {
-          url: error.config?.url,
+          baseURL: base,
+          path,
+          fullUrl: path.startsWith('http') ? path : `${base}${path}`,
           method: error.config?.method,
           status: error.response?.status,
           statusText: error.response?.statusText,
           data: error.response?.data,
-          message: error.message
+          message: error.message,
         })
 
         const apiError: ApiError = {
