@@ -8,7 +8,7 @@ on:
 
 env:
   NODE_VERSION: '18'
-  PNPM_VERSION: '8'
+  PNPM_VERSION: '9'
 
 jobs:
   lint-and-typecheck:
@@ -149,7 +149,7 @@ jobs:
       - name: Start development server
         run: |
           pnpm run dev &
-          npx wait-on http://localhost:3000
+          pnpm exec wait-on http://localhost:3000
         env:
           CI: true
 
@@ -192,7 +192,7 @@ jobs:
       - name: Start application
         run: |
           pnpm run preview &
-          npx wait-on http://localhost:3000
+          pnpm exec wait-on http://localhost:3000
 
       - name: Run Lighthouse CI
         uses: treosh/lighthouse-ci-action@v10
@@ -232,7 +232,7 @@ jobs:
         run: |
           pnpm run build
           pnpm run preview &
-          npx wait-on http://localhost:3000
+          pnpm exec wait-on http://localhost:3000
 
       - name: Run accessibility tests
         run: pnpm exec playwright test tests/e2e/accessibility.spec.ts

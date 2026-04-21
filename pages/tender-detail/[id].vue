@@ -231,14 +231,72 @@
                     </div>
                   </div>
 
-                  <!-- Property Mark JSON -->
-                  <div v-if="tender.property_mark" class="flex items-start">
-                    <div class="w-24 text-sm font-medium text-primary-600">物件標記</div>
-                    <div class="flex-1">
-                      <div class="bg-gray-50 rounded-lg p-3 overflow-x-auto border border-gray-200">
-                        <pre class="text-xs text-gray-800 whitespace-pre-wrap break-all font-mono leading-relaxed">{{ formatPropertyMark(tender.property_mark) }}</pre>
+                  <!-- 🆕 v0.4.3 不動產標示 -->
+                  <div v-if="tender.property_mark && tender.property_mark.length > 0" class="flex items-start">
+                    <div class="w-24 text-sm font-medium text-primary-600">不動產標示</div>
+                    <div class="flex-1 space-y-3">
+                      <div 
+                        v-for="(mark, index) in tender.property_mark" 
+                        :key="index"
+                        class="bg-gradient-to-r from-primary-25 to-accent-25 rounded-lg p-4 border border-primary-100"
+                      >
+                        <div class="flex items-center mb-3">
+                          <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-accent-100 text-accent-800">
+                            項目 {{ index + 1 }}
+                          </span>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <!-- 地號信息 -->
+                          <div v-if="mark.地號" class="bg-white rounded-lg p-3 border border-primary-100">
+                            <div class="flex items-center text-primary-700 mb-2">
+                              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                              </svg>
+                              <span class="text-sm font-medium">土地地號</span>
+                            </div>
+                            <p class="text-sm text-primary-900 break-all">{{ mark.地號 }}</p>
+                          </div>
+                          
+                          <!-- 建號信息 -->
+                          <div v-if="mark.建號" class="bg-white rounded-lg p-3 border border-secondary-100">
+                            <div class="flex items-center text-secondary-700 mb-2">
+                              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                              </svg>
+                              <span class="text-sm font-medium">建物建號</span>
+                            </div>
+                            <p class="text-sm text-secondary-900 break-all">{{ mark.建號 }}</p>
+                          </div>
+                          
+                          <!-- 面積信息 -->
+                          <div v-if="mark.面積" class="bg-white rounded-lg p-3 border border-success-100">
+                            <div class="flex items-center text-success-700 mb-2">
+                              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+                              </svg>
+                              <span class="text-sm font-medium">面積</span>
+                            </div>
+                            <p class="text-sm text-success-900">{{ mark.面積 }}</p>
+                          </div>
+                          
+                          <!-- 使用分區 -->
+                          <div v-if="mark.使用分區" class="bg-white rounded-lg p-3 border border-accent-100">
+                            <div class="flex items-center text-accent-700 mb-2">
+                              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+                              </svg>
+                              <span class="text-sm font-medium">使用分區</span>
+                            </div>
+                            <p class="text-sm text-accent-900">{{ mark.使用分區 }}</p>
+                          </div>
+                        </div>
                       </div>
-                      <p class="text-xs text-gray-500 mt-1">JSON 格式的物件標記資料</p>
+                      
+                      <div class="text-xs text-primary-500 mt-2">
+                        💡 根據 TFASC v0.4.3 規格顯示的結構化不動產標示資料
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -462,16 +520,7 @@ const formatDateTime = (dateString: string) => {
   return new Date(dateString).toLocaleString('zh-TW')
 }
 
-// 格式化 Property Mark JSON
-const formatPropertyMark = (jsonString: string) => {
-  try {
-    const parsed = JSON.parse(jsonString)
-    return JSON.stringify(parsed, null, 2)
-  } catch (error) {
-    // 如果不是有效的 JSON，直接返回原始字串
-    return jsonString
-  }
-}
+// 🆕 v0.4.3: Property Mark 現在是結構化數據，不再需要 JSON 解析
 
 // 頁面載入時執行
 onMounted(() => {

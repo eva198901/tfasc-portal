@@ -26,6 +26,10 @@
                         class="text-primary-light hover:text-primary px-4 py-2 rounded-md text-sm font-medium transition-colors duration-300">
                 連結任務
               </NuxtLink>
+              <NuxtLink to="/crawl-tasks-demo" 
+                        class="text-primary-light hover:text-primary px-4 py-2 rounded-md text-sm font-medium transition-colors duration-300">
+                爬蟲任務
+              </NuxtLink>
             </div>
           </div>
         </div>

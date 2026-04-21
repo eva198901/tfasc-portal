@@ -1,4 +1,8 @@
-import type { CrawlTask, CrawlTaskCreate, CrawlTasksParams } from '~/types/crawlTask'
+import type {
+  CrawlTask,
+  CrawlTaskCreate,
+  CrawlTasksResponse,
+} from '~/types/crawlTask'
 
 /**
  * 爬蟲任務管理 API Composable
@@ -12,7 +16,7 @@ export const useCrawlTasks = () => {
    */
   const createCrawlTask = async (payload: CrawlTaskCreate): Promise<CrawlTask> => {
     try {
-      return await post<CrawlTask>('/crawl-tasks', payload)
+      return await post<CrawlTask>('/crawl-tasks/', payload)
     } catch (error: any) {
       console.error('創建爬蟲任務失敗:', error)
       throw error
@@ -29,10 +33,15 @@ export const useCrawlTasks = () => {
     if (params.skip !== undefined) queryParams.append('skip', params.skip.toString())
     if (params.limit !== undefined) queryParams.append('limit', params.limit.toString())
 
-    const url = `/crawl-tasks${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
-    
+    const qs = queryParams.toString()
+    const url = qs ? `/crawl-tasks/?${qs}` : '/crawl-tasks/'
+
     try {
-      return await get<CrawlTask[]>(url)
+      const raw = await get<CrawlTasksResponse | CrawlTask[]>(url)
+      if (Array.isArray(raw)) {
+        return raw
+      }
+      return raw.tasks
     } catch (error: any) {
       console.error('取得任務列表失敗:', error)
       throw error

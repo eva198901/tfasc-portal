@@ -8,6 +8,7 @@ dist
 
 # Node dependencies
 node_modules
+package-lock.json
 
 # Logs
 logs
@@ -17,6 +18,11 @@ logs
 .DS_Store
 .fleet
 .idea
+
+# 舊版內嵌 Python 示範後端（勿提交 venv／本機 DB）
+server/venv/
+server/__pycache__/
+server/*.db
 
 # Local env files
 .env

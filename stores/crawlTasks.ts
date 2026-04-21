@@ -1,6 +1,23 @@
 import { defineStore } from 'pinia'
-import type { CrawlTask, CrawlTaskCreate, CrawlTasksResponse, CrawlTasksParams, TaskStatus } from '~/types/crawlTask'
 import type { ApiError } from '~/composables/useApi'
+import type { CrawlTask, CrawlTaskCreate, TaskStatus } from '~/types/crawlTask'
+
+// API 回應介面 (使用統一的 CrawlTask 型別)
+interface CrawlTasksResponse {
+  tasks: CrawlTask[]
+  total: number
+  page: number
+  pageSize: number
+}
+
+interface ImportLatestTasksResponse {
+  source: string
+  totalFound: number
+  created: number
+  skippedExisting: number
+  skippedDuplicateInPage: number
+  createdTaskIds: number[]
+}
 
 export const useCrawlTasksStore = defineStore('crawlTasks', {
   // 狀態定義
@@ -46,45 +63,35 @@ export const useCrawlTasksStore = defineStore('crawlTasks', {
   // Actions (方法)
   actions: {
     /**
-     * 取得所有爬蟲任務
-     * @param params 查詢參數
+     * 取得所有連結任務
+     * @param page 頁碼
+     * @param pageSize 每頁數量
      */
-    async fetchTasks(params: CrawlTasksParams = {}) {
+    async fetchTasks(page: number = 1, pageSize: number = 10) {
       this.loading = true
       this.error = null
 
       try {
+        // 在客戶端使用時需要動態導入 useApi
         const { useApi } = await import('~/composables/useApi')
         const { get } = useApi()
         
-        // 建立查詢參數
-        const queryParams = new URLSearchParams()
-        if (params.skip !== undefined) queryParams.append('skip', params.skip.toString())
-        if (params.limit !== undefined) queryParams.append('limit', params.limit.toString())
-        
-        const url = `/crawl-tasks${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
-        
-        const response = await get<CrawlTask[]>(url)
-        
-        // 如果是陣列格式，直接使用；如果是分頁格式，解構
-        if (Array.isArray(response)) {
-          this.tasks = response
-          this.pagination.total = response.length
-        } else {
-          // 假設是 CrawlTasksResponse 格式
-          const paginatedResponse = response as unknown as CrawlTasksResponse
-          this.tasks = paginatedResponse.tasks
-          this.pagination = {
-            total: paginatedResponse.total,
-            page: paginatedResponse.page,
-            pageSize: paginatedResponse.pageSize
-          }
+        // 須有尾隨斜線，否則 FastAPI 會 307；參數與 Docker 版 API 一致（page / pageSize）
+        const response = await get<CrawlTasksResponse>(
+          `/crawl-tasks/?page=${page}&pageSize=${pageSize}`
+        )
+
+        this.tasks = response.tasks
+        this.pagination = {
+          total: response.total,
+          page: response.page,
+          pageSize: response.pageSize
         }
 
-        return this.tasks
+        return response
       } catch (error: any) {
-        this.error = error.message || '取得爬蟲任務失敗'
-        console.error('取得爬蟲任務失敗:', error)
+        this.error = error.message || '取得連結任務失敗'
+        console.error('取得連結任務失敗:', error)
         throw error
       } finally {
         this.loading = false
@@ -92,10 +99,15 @@ export const useCrawlTasksStore = defineStore('crawlTasks', {
     },
 
     /**
-     * 新增爬蟲任務
-     * @param url 爬蟲網址
+     * 新增連結任務
+     * @param url 連結網址
+     * @param options 額外選項
      */
-    async createTask(url: string) {
+    async addTask(url: string, options?: {
+      title?: string
+      description?: string
+      priority?: 'low' | 'normal' | 'high'
+    }) {
       this.loading = true
       this.error = null
 
@@ -111,11 +123,13 @@ export const useCrawlTasksStore = defineStore('crawlTasks', {
           throw new Error('請輸入有效的網址格式')
         }
 
+        // 在客戶端使用時需要動態導入 useApi
         const { useApi } = await import('~/composables/useApi')
         const { post } = useApi()
         
-        const taskData: CrawlTaskCreate = { url }
-        const newTask = await post<CrawlTask>('/crawl-tasks', taskData)
+        const newTask = await post<CrawlTask>('/crawl-tasks/', {
+          url,
+        })
 
         // 將新任務加入到列表開頭
         this.tasks.unshift(newTask)
@@ -123,8 +137,8 @@ export const useCrawlTasksStore = defineStore('crawlTasks', {
 
         return newTask
       } catch (error: any) {
-        this.error = error.message || '新增爬蟲任務失敗'
-        console.error('新增爬蟲任務失敗:', error)
+        this.error = error.message || '新增連結任務失敗'
+        console.error('新增連結任務失敗:', error)
         throw error
       } finally {
         this.loading = false
@@ -132,34 +146,39 @@ export const useCrawlTasksStore = defineStore('crawlTasks', {
     },
 
     /**
-     * 取得單一任務
+     * 更新任務狀態
      * @param taskId 任務 ID
+     * @param status 新狀態
+     * @param metadata 額外元數據
      */
-    async getTask(taskId: number) {
+    async updateTaskStatus(
+      taskId: number, 
+      status: TaskStatus
+    ) {
       try {
         const { useApi } = await import('~/composables/useApi')
-        const { get } = useApi()
+        const { put } = useApi()
         
-        const task = await get<CrawlTask>(`/crawl-tasks/${taskId}`)
+        const updatedTask = await put<CrawlTask>(`/crawl-tasks/${taskId}`, {
+          status,
+        })
 
         // 更新本地狀態
-        const index = this.tasks.findIndex(t => t.id === taskId)
+        const index = this.tasks.findIndex(task => task.id === taskId)
         if (index !== -1) {
-          this.tasks[index] = task
-        } else {
-          this.tasks.push(task)
+          this.tasks[index] = updatedTask
         }
 
-        return task
+        return updatedTask
       } catch (error: any) {
-        this.error = error.message || '取得任務詳情失敗'
-        console.error('取得任務詳情失敗:', error)
+        this.error = error.message || '更新任務狀態失敗'
+        console.error('更新任務狀態失敗:', error)
         throw error
       }
     },
 
     /**
-     * 刪除爬蟲任務
+     * 刪除連結任務
      * @param taskId 任務 ID
      */
     async deleteTask(taskId: number) {
@@ -185,28 +204,53 @@ export const useCrawlTasksStore = defineStore('crawlTasks', {
     },
 
     /**
-     * 輪詢任務狀態
-     * @param taskId 任務 ID
-     * @param interval 輪詢間隔（毫秒）
+     * 批次操作：刪除多個任務
+     * @param taskIds 任務 ID 陣列
      */
-    async pollTaskStatus(taskId: number, interval: number = 5000) {
-      const poll = async () => {
-        try {
-          const task = await this.getTask(taskId)
-          
-          // 如果任務完成或失敗，停止輪詢
-          if (task.status === 'done' || task.status === 'failed') {
-            return task
-          }
-          
-          // 繼續輪詢
-          setTimeout(() => poll(), interval)
-        } catch (error) {
-          console.error('輪詢任務狀態失敗:', error)
-        }
+    async deleteTasks(taskIds: number[]) {
+      try {
+        const { useApi } = await import('~/composables/useApi')
+        const { post } = useApi()
+        
+        await post('/crawl-tasks/batch-delete', { taskIds })
+
+        // 從本地狀態移除
+        this.tasks = this.tasks.filter(task => !taskIds.includes(task.id))
+        this.pagination.total -= taskIds.length
+
+        return true
+      } catch (error: any) {
+        this.error = error.message || '批次刪除任務失敗'
+        console.error('批次刪除任務失敗:', error)
+        throw error
       }
-      
-      return poll()
+    },
+
+    /**
+     * 重新處理失敗的任務
+     * @param taskId 任務 ID
+     */
+    async retryTask(taskId: number) {
+      try {
+        const { useApi } = await import('~/composables/useApi')
+        const { post } = useApi()
+        
+        const updatedTask = await post<CrawlTask>(
+          `/crawl-tasks/${taskId}/retry`
+        )
+
+        // 更新本地狀態
+        const index = this.tasks.findIndex(task => task.id === taskId)
+        if (index !== -1) {
+          this.tasks[index] = updatedTask
+        }
+
+        return updatedTask
+      } catch (error: any) {
+        this.error = error.message || '重試任務失敗'
+        console.error('重試任務失敗:', error)
+        throw error
+      }
     },
 
     /**
@@ -231,7 +275,90 @@ export const useCrawlTasksStore = defineStore('crawlTasks', {
     },
 
     /**
-     * 驗證 URL 格式
+     * 取得單個任務詳情
+     * @param taskId 任務ID
+     */
+    async getTask(taskId: number): Promise<CrawlTask> {
+      try {
+        const { useApi } = await import('~/composables/useApi')
+        const { get } = useApi()
+        
+        const task = await get<CrawlTask>(`/crawl-tasks/${taskId}`)
+        
+        // 更新本地狀態中的任務
+        const index = this.tasks.findIndex(t => t.id === taskId)
+        if (index !== -1) {
+          this.tasks[index] = task
+        } else {
+          this.tasks.unshift(task)
+        }
+
+        return task
+      } catch (error: any) {
+        this.error = error.message || '取得任務詳情失敗'
+        console.error('取得任務詳情失敗:', error)
+        throw error
+      }
+    },
+
+    /**
+     * 創建任務 (addTask 的別名)
+     * @param url 網址
+     */
+    async createTask(url: string): Promise<CrawlTask> {
+      return this.addTask(url)
+    },
+
+    /**
+     * 抓取 TFASC 首頁的批號連結並批次新增任務
+     */
+    async importLatestTasks(): Promise<ImportLatestTasksResponse> {
+      this.loading = true
+      this.error = null
+
+      try {
+        const { useApi } = await import('~/composables/useApi')
+        const { post } = useApi()
+        const result = await post<ImportLatestTasksResponse>('/crawl-tasks/import-latest')
+
+        // 重新取得列表，確保分頁與統計一致
+        await this.fetchTasks(this.pagination.page, this.pagination.pageSize)
+
+        return result
+      } catch (error: any) {
+        this.error = error.message || '抓取最新資訊失敗'
+        console.error('抓取最新資訊失敗:', error)
+        throw error
+      } finally {
+        this.loading = false
+      }
+    },
+
+    /**
+     * 輪詢任務狀態
+     * @param taskId 任務ID
+     * @param interval 輪詢間隔(毫秒)
+     */
+    async pollTaskStatus(taskId: number, interval: number = 1000): Promise<void> {
+      const poll = async () => {
+        try {
+          const task = await this.getTask(taskId)
+          if (task.status === 'done' || task.status === 'failed') {
+            return // 停止輪詢
+          }
+          setTimeout(poll, interval)
+        } catch (error) {
+          console.error('輪詢任務狀態失敗:', error)
+        }
+      }
+      
+      await poll()
+    },
+
+    /**
+     * 工具方法：驗證 URL 格式
+     * @param url 網址
+     * @private
      */
     isValidUrl(url: string): boolean {
       try {

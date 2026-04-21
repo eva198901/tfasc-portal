@@ -19,11 +19,18 @@ class ApiClient {
     const config = useRuntimeConfig()
     
     this.axiosInstance = axios.create({
-      baseURL: (config.public?.apiBaseUrl as string) || 'http://localhost:3001/api',
+      // 在開發環境使用相對路徑（通過 Vite 代理），生產環境使用絕對路徑
+      baseURL: process.env.NODE_ENV === 'development' 
+        ? '/api/v1' 
+        : (config.public?.apiBaseUrl as string) || 'http://localhost:8000/api/v1',
       timeout: 10000,
       headers: {
         'Content-Type': 'application/json',
       },
+      // 自動處理重定向
+      maxRedirects: 5,
+      // 允許處理 HTTP 307 重定向
+      validateStatus: (status) => status < 400,
     })
 
     // 請求攔截器
@@ -48,6 +55,16 @@ class ApiClient {
         return response
       },
       (error) => {
+        // 詳細錯誤日誌
+        console.error('API 請求錯誤:', {
+          url: error.config?.url,
+          method: error.config?.method,
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          message: error.message
+        })
+
         const apiError: ApiError = {
           message: error.response?.data?.message || error.message || '發生未知錯誤',
           status: error.response?.status,
@@ -65,6 +82,12 @@ class ApiClient {
         } else if (error.response?.status >= 500) {
           // 服務器錯誤
           console.error('服務器錯誤：', apiError.message)
+        } else if (error.code === 'ECONNREFUSED') {
+          // 連接被拒絕
+          apiError.message = 'API 服務器無法連接，請檢查服務器狀態'
+        } else if (error.code === 'NETWORK_ERROR') {
+          // 網路錯誤
+          apiError.message = '網路連接失敗，請檢查網路狀態'
         }
 
         return Promise.reject(apiError)

@@ -1,7 +1,14 @@
 {
-  "name": "nuxt-app",
+  "name": "tfasc-portal",
+  "description": "TFASC Portal - 標售資料爬蟲任務管理系統 (Nuxt 3 + FastAPI)",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=18",
+    "pnpm": ">=9.0.0"
+  },
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
@@ -15,9 +22,12 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:debug": "playwright test --debug",
-    "test:all": "npm run test:unit:coverage && npm run test:e2e",
+    "test:all": "pnpm run test:unit:coverage && pnpm run test:e2e",
     "lint": "eslint .",
-    "typecheck": "nuxt typecheck"
+    "typecheck": "nuxt typecheck",
+    "start:fullstack": "./start-fullstack.sh",
+    "start:backend": "cd server && python start.py",
+    "test:backend": "cd server && python test_simple.py"
   },
   "dependencies": {
     "@fontsource/noto-sans-tc": "^5.0.17",
@@ -45,6 +55,7 @@
     "postcss": "^8.5.4",
     "tailwindcss": "^3.4.0",
     "typescript": "^5.4.5",
-    "vitest": "^3.2.1"
+    "vitest": "^3.2.1",
+    "wait-on": "^8.0.1"
   }
 }

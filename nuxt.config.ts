@@ -1,7 +1,7 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2025-05-15',
-  devtools: { enabled: true },
+  devtools: { enabled: import.meta.dev },
   
   css: [
     '~/assets/css/main.css',
@@ -53,7 +53,7 @@ export default defineNuxtConfig({
     
     // 公共環境變數（客戶端和服務端都可用）
     public: {
-      // 使用 NUXT_PUBLIC_API_BASE_URL 環境變數，默認為 TFASC API
+      // 使用 NUXT_PUBLIC_API_BASE_URL 環境變數，默認為 TFASC API v0.4.3
       apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api/v1'
     }
   },
@@ -68,6 +68,21 @@ export default defineNuxtConfig({
             vendor: ['vue', 'vue-router'],
             utils: ['axios']
           }
+        }
+      }
+    },
+    // 開發模式下的 API 代理設定（解決 CORS 問題）- v0.4.3
+    server: {
+      proxy: {
+        '/api': {
+          target: 'http://localhost:8000',
+          changeOrigin: true,
+          secure: false
+        },
+        '/health': {
+          target: 'http://localhost:8000',
+          changeOrigin: true,
+          secure: false
         }
       }
     }

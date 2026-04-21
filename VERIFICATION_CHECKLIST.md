@@ -3,14 +3,16 @@
 ## ✅ API 連線
 
 ### `/crawl-tasks POST → 200/201`
-- ✅ 已實作 `useCrawlTasks` composable 
-- ✅ 支援 POST `/crawl-tasks` 端點
+- ✅ 已實作 `useCrawlTasks` composable 與 Pinia `crawlTasks` store
+- ✅ 支援 `POST /api/v1/crawl-tasks/`（建議帶尾隨斜線，與 FastAPI 路由一致）
+- ✅ 支援 `POST /api/v1/crawl-tasks/import-latest`（由官網批號欄匯入任務）
 - ✅ 回傳標準 HTTP 200/201 狀態碼
 
 ### `/tenders` 篩選參數回傳正確
 - ✅ 已實作完整的篩選參數支援
-- ✅ 支援 `skip`, `limit`, `from`, `to` 參數
-- ✅ 包含客戶端篩選功能（標號、公告搜尋）
+- ✅ 列表：`GET /api/v1/tenders/` 支援 `skip`, `limit`, `from`, `to`（日期為 query alias `from` / `to`）
+- ✅ 進階搜尋：`GET /api/v1/tenders/search` 支援 `keyword`, `region`, `tender_no`, `date_from`, `date_to`, `zoning`, `price_min`, `price_max`, `skip`, `limit`
+- ✅ Portal 另有客戶端篩選（例如標的類型、過期案件）輔助列表呈現
 
 ## ✅ Link Dashboard
 
@@ -71,8 +73,9 @@
 tfasc-portal/
 ├── components/
 │   ├── AddLinkModal.vue       # ✅ 新增標售連結模態框
-│   ├── ToastContainer.vue     # ✅ Toast 通知容器
-│   └── LinkTable.vue          # 原有組件
+│   ├── TenderFilter.vue       # ✅ 標售篩選（若流程中有使用）
+│   ├── Toast.vue              # ✅ Toast 單則通知
+│   └── ToastContainer.vue     # ✅ Toast 通知容器
 ├── composables/
 │   ├── useApi.ts              # 原有 API 基礎
 │   ├── useTenders.ts          # ✅ 標售資料 API

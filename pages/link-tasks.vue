@@ -1,220 +1,70 @@
 <template>
   <NuxtLayout>
-    <div class="container mx-auto px-4 py-8">
-      <div class="min-h-screen bg-background">
-        <!-- 導航欄 -->
-        <nav class="bg-white shadow-card border-b border-gray-200">
-          <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-              <div class="flex items-center">
-                <NuxtLink to="/" class="flex items-center space-x-2">
-                  <div class="w-8 h-8 bg-gradient-to-br from-primary to-primary-dark rounded-lg flex items-center justify-center">
-                    <span class="text-white font-bold text-sm">T</span>
-                  </div>
-                  <h1 class="text-xl font-semibold text-primary">TFASC Portal</h1>
-                </NuxtLink>
-              </div>
-              <div class="flex items-center space-x-1">
-                <NuxtLink to="/dashboard" 
-                          class="text-primary-light hover:text-primary px-4 py-2 rounded-md text-sm font-medium transition-colors duration-300">
-                  儀表板
-                </NuxtLink>
-                <NuxtLink to="/tenders" 
-                          class="text-primary-light hover:text-primary px-4 py-2 rounded-md text-sm font-medium transition-colors duration-300">
-                  標案管理
-                </NuxtLink>
-                <span class="bg-accent/10 text-accent px-4 py-2 rounded-md text-sm font-medium">
-                  連結任務
-                </span>
-              </div>
+    <div class="min-h-screen bg-background flex items-center justify-center">
+      <div class="max-w-md w-full bg-white shadow-lg rounded-lg p-8 text-center">
+        <div class="mb-6">
+          <div class="w-16 h-16 bg-gradient-to-br from-primary to-primary-dark rounded-lg flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+            </svg>
+          </div>
+          <h1 class="text-2xl font-bold text-primary mb-2">頁面已遷移</h1>
+          <p class="text-primary-light mb-6">
+            連結任務管理功能已整合到爬蟲任務管理中，為您提供更完整的功能體驗。
+          </p>
+        </div>
+        
+        <div class="space-y-4">
+          <NuxtLink 
+            to="/crawl-tasks-demo"
+            class="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition-all duration-200"
+          >
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+            </svg>
+            前往爬蟲任務管理
+          </NuxtLink>
+          
+          <NuxtLink 
+            to="/"
+            class="w-full inline-flex items-center justify-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent transition-colors duration-200"
+          >
+            返回首頁
+          </NuxtLink>
+        </div>
+        
+        <div class="mt-8 p-4 bg-blue-50 rounded-lg">
+          <div class="flex items-start">
+            <svg class="w-5 h-5 text-blue-400 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <div class="text-left">
+              <h3 class="text-sm font-medium text-blue-800 mb-1">新功能亮點</h3>
+              <ul class="text-sm text-blue-700 space-y-1">
+                <li>• 統一的任務管理介面</li>
+                <li>• 即時狀態更新</li>
+                <li>• 批量操作支援</li>
+                <li>• 完整的API文檔</li>
+              </ul>
             </div>
           </div>
-        </nav>
-
-        <!-- 主要內容 -->
-        <main class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-          <!-- 頁面標題 -->
-          <div class="mb-8">
-            <h1 class="text-3xl font-bold text-primary">連結任務管理</h1>
-            <p class="mt-2 text-primary-light">
-              管理和監控所有連結處理任務的狀態和進度
-            </p>
-          </div>
-
-          <!-- 快速新增區域 -->
-          <div class="mb-8">
-            <div class="bg-white shadow-card rounded-lg border border-gray-200 p-6">
-              <h2 class="text-lg font-medium text-primary mb-4">新增連結任務</h2>
-              <form @submit.prevent="handleAddTask" class="flex flex-col sm:flex-row gap-4">
-                <div class="flex-1">
-                  <label for="url" class="sr-only">連結網址</label>
-                  <input
-                    id="url"
-                    v-model="newTaskUrl"
-                    type="url"
-                    required
-                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-accent focus:ring-accent sm:text-sm"
-                    placeholder="輸入連結網址... (例如: https://example.com)"
-                  />
-                </div>
-                <div class="flex-shrink-0">
-                  <button
-                    type="submit"
-                    :disabled="loading || !newTaskUrl.trim()"
-                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-                  >
-                    <PlusIcon v-if="!loading" class="h-4 w-4 mr-2" />
-                    <ArrowPathIcon v-else class="h-4 w-4 mr-2 animate-spin" />
-                    {{ loading ? '新增中...' : '新增任務' }}
-                  </button>
-                </div>
-              </form>
-              
-              <!-- 錯誤訊息 -->
-              <div v-if="error" class="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
-                <div class="flex">
-                  <ExclamationTriangleIcon class="h-5 w-5 text-red-400" />
-                  <div class="ml-3">
-                    <p class="text-sm text-red-800">{{ error }}</p>
-                    <button
-                      @click="clearError"
-                      class="mt-2 text-sm text-red-600 hover:text-red-500 underline"
-                    >
-                      關閉
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 統計卡片 -->
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white overflow-hidden shadow-card rounded-lg border border-gray-200">
-              <div class="p-5">
-                <div class="flex items-center">
-                  <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <QueueListIcon class="h-5 w-5 text-blue-600" />
-                    </div>
-                  </div>
-                  <div class="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt class="text-sm font-medium text-gray-500 truncate">總任務數</dt>
-                      <dd class="text-lg font-medium text-gray-900">{{ taskStats.total }}</dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="bg-white overflow-hidden shadow-card rounded-lg border border-gray-200">
-              <div class="p-5">
-                <div class="flex items-center">
-                  <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
-                      <ClockIcon class="h-5 w-5 text-yellow-600" />
-                    </div>
-                  </div>
-                  <div class="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt class="text-sm font-medium text-gray-500 truncate">執行中</dt>
-                      <dd class="text-lg font-medium text-gray-900">{{ taskStats.running }}</dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="bg-white overflow-hidden shadow-card rounded-lg border border-gray-200">
-              <div class="p-5">
-                <div class="flex items-center">
-                  <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                      <CheckCircleIcon class="h-5 w-5 text-green-600" />
-                    </div>
-                  </div>
-                  <div class="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt class="text-sm font-medium text-gray-500 truncate">已完成</dt>
-                      <dd class="text-lg font-medium text-gray-900">{{ taskStats.done }}</dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="bg-white overflow-hidden shadow-card rounded-lg border border-gray-200">
-              <div class="p-5">
-                <div class="flex items-center">
-                  <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
-                      <XCircleIcon class="h-5 w-5 text-red-600" />
-                    </div>
-                  </div>
-                  <div class="ml-5 w-0 flex-1">
-                    <dl>
-                      <dt class="text-sm font-medium text-gray-500 truncate">失敗</dt>
-                      <dd class="text-lg font-medium text-gray-900">{{ taskStats.failed }}</dd>
-                    </dl>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 連結任務表格 -->
-          <LinkTable :page-size="15" />
-        </main>
+        </div>
       </div>
     </div>
   </NuxtLayout>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { storeToRefs } from 'pinia'
-import {
-  PlusIcon,
-  ArrowPathIcon,
-  ExclamationTriangleIcon,
-  QueueListIcon,
-  ClockIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-} from '@heroicons/vue/24/outline'
-import { useCrawlTasksStore } from '~/stores/crawlTasks'
-import LinkTable from '~/components/LinkTable.vue'
-
 // 頁面元資料
 useHead({
-  title: '爬蟲任務管理 - TFASC Portal',
+  title: '頁面已遷移 - TFASC Portal',
   meta: [
-    { name: 'description', content: 'TFASC Portal 爬蟲任務管理系統' }
+    { name: 'description', content: '連結任務管理功能已遷移到爬蟲任務管理' }
   ]
 })
 
-// Store 和狀態
-const crawlTasksStore = useCrawlTasksStore()
-const { loading, error, taskStats } = storeToRefs(crawlTasksStore)
-
-// 本地狀態
-const newTaskUrl = ref('')
-
-// 方法
-const handleAddTask = async () => {
-  if (!newTaskUrl.value.trim()) return
-
-  try {
-    await crawlTasksStore.createTask(newTaskUrl.value.trim())
-    newTaskUrl.value = ''
-  } catch (error) {
-    // 錯誤已在 store 中處理
-    console.error('新增任務失敗:', error)
-  }
-}
-
-const clearError = () => {
-  crawlTasksStore.clearError()
-}
+// 5秒後自動重定向（可選）
+// setTimeout(() => {
+//   navigateTo('/crawl-tasks-demo')
+// }, 5000)
 </script> 

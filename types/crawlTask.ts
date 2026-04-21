@@ -5,6 +5,7 @@ export interface CrawlTask {
   status: TaskStatus
   created_at: string
   finished_at?: string | null
+  item_count?: number
 }
 
 export interface CrawlTaskCreate {
@@ -27,6 +28,18 @@ export interface CrawlTasksParams {
   limit?: number
   page?: number
   pageSize?: number
+}
+
+// 任務更新參數
+export interface CrawlTaskUpdate {
+  status?: TaskStatus
+  finished_at?: string | null
+  item_count?: number
+}
+
+// 批次刪除參數
+export interface BatchDeleteParams {
+  taskIds: number[]
 }
 
 // API 錯誤格式

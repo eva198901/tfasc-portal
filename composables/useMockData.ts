@@ -1,11 +1,12 @@
-import type { LinkTask } from '~/stores/linkTasks'
+import type { CrawlTask, TaskStatus } from '~/types/crawlTask'
 
 /**
  * 模擬資料生成器
- * 用於測試和開發 LinkTable 組件
+ * 用於測試和開發爬蟲任務功能
  */
 
 const mockUrls = [
+  'https://www.tfasc.gov.tw',
   'https://www.example.com',
   'https://github.com/nuxt/nuxt',
   'https://tailwindcss.com',
@@ -18,66 +19,35 @@ const mockUrls = [
   'https://developer.mozilla.org'
 ]
 
-const mockTitles = [
-  'Example Domain',
-  'Nuxt: The Intuitive Web Framework',
-  'Tailwind CSS - A utility-first CSS framework',
-  'Headless UI - Unstyled, fully accessible UI components',
-  'Heroicons - Beautiful hand-crafted SVG icons',
-  'Pinia - The Vue Store that you will enjoy using',
-  'Vue.js - The Progressive JavaScript Framework',
-  'TypeScript - JavaScript with syntax for types',
-  'Stack Overflow - Where Developers Learn',
-  'MDN Web Docs - Resources for developers'
-]
-
-const mockDescriptions = [
-  '網頁內容分析和資料擷取',
-  '技術文件和 API 參考資料',
-  'CSS 框架使用指南',
-  '使用者介面組件庫',
-  '圖標資源和設計素材',
-  '狀態管理解決方案',
-  '前端框架技術文件',
-  '程式語言學習資源',
-  '技術問答和解決方案',
-  '網頁開發參考文件'
-]
-
-const statuses: LinkTask['status'][] = ['pending', 'processing', 'completed', 'failed']
+const statuses: TaskStatus[] = ['pending', 'running', 'done', 'failed']
 
 /**
- * 生成隨機的連結任務資料
+ * 生成隨機的爬蟲任務資料
  */
-export const generateMockLinkTask = (id?: string): LinkTask => {
+export const generateMockCrawlTask = (id?: number): CrawlTask => {
   const randomIndex = Math.floor(Math.random() * mockUrls.length)
   const status = statuses[Math.floor(Math.random() * statuses.length)]
   const createdAt = new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000) // 過去30天內隨機時間
-  const updatedAt = new Date(createdAt.getTime() + Math.random() * 24 * 60 * 60 * 1000) // 建立時間後的隨機時間
+  const finishedAt = status === 'done' || status === 'failed' 
+    ? new Date(createdAt.getTime() + Math.random() * 24 * 60 * 60 * 1000).toISOString()
+    : null
 
   return {
-    id: id || `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    id: id || Math.floor(Math.random() * 10000) + 1,
     url: mockUrls[randomIndex],
-    title: mockTitles[randomIndex],
-    description: mockDescriptions[randomIndex],
     status,
-    createdAt: createdAt.toISOString(),
-    updatedAt: updatedAt.toISOString(),
-    metadata: {
-      domain: new URL(mockUrls[randomIndex]).hostname,
-      contentType: 'text/html',
-      size: Math.floor(Math.random() * 1000000) + 10000, // 10KB to 1MB
-      lastChecked: updatedAt.toISOString()
-    }
+    created_at: createdAt.toISOString(),
+    finished_at: finishedAt,
+    item_count: status === 'done' ? Math.floor(Math.random() * 100) + 1 : undefined
   }
 }
 
 /**
- * 生成多個模擬連結任務
+ * 生成多個模擬爬蟲任務
  */
-export const generateMockLinkTasks = (count: number = 50): LinkTask[] => {
+export const generateMockCrawlTasks = (count: number = 50): CrawlTask[] => {
   return Array.from({ length: count }, (_, index) => 
-    generateMockLinkTask(`task-${String(index + 1).padStart(3, '0')}`)
+    generateMockCrawlTask(index + 1)
   )
 }
 
@@ -85,14 +55,14 @@ export const generateMockLinkTasks = (count: number = 50): LinkTask[] => {
  * 用於開發測試的 composable
  */
 export const useMockData = async () => {
-  const { useLinkTasksStore } = await import('~/stores/linkTasks')
-  const store = useLinkTasksStore()
+  const { useCrawlTasksStore } = await import('~/stores/crawlTasks')
+  const store = useCrawlTasksStore()
 
   /**
    * 載入模擬資料到 store
    */
   const loadMockData = (count: number = 25) => {
-    const mockTasks = generateMockLinkTasks(count)
+    const mockTasks = generateMockCrawlTasks(count)
     
     // 直接設定 store 的 tasks 狀態
     store.$patch({
@@ -106,7 +76,7 @@ export const useMockData = async () => {
       }
     })
 
-    console.log(`已載入 ${count} 筆模擬連結任務資料`)
+    console.log(`已載入 ${count} 筆模擬爬蟲任務資料`)
     return mockTasks
   }
 
@@ -115,14 +85,14 @@ export const useMockData = async () => {
    */
   const clearData = () => {
     store.$reset()
-    console.log('已清空所有連結任務資料')
+    console.log('已清空所有爬蟲任務資料')
   }
 
   /**
    * 新增單一模擬任務
    */
-  const addMockTask = (status?: LinkTask['status']) => {
-    const mockTask = generateMockLinkTask()
+  const addMockTask = (status?: TaskStatus) => {
+    const mockTask = generateMockCrawlTask()
     if (status) {
       mockTask.status = status
     }
@@ -138,19 +108,21 @@ export const useMockData = async () => {
    * 模擬狀態變化
    */
   const simulateStatusChanges = () => {
-    const pendingTasks = store.tasks.filter(task => task.status === 'pending')
-    const processingTasks = store.tasks.filter(task => task.status === 'processing')
+    const pendingTasks = store.tasks.filter((task: CrawlTask) => task.status === 'pending')
+    const runningTasks = store.tasks.filter((task: CrawlTask) => task.status === 'running')
 
-    // 將一些 pending 任務變成 processing
-    pendingTasks.slice(0, 2).forEach(task => {
-      task.status = 'processing'
-      task.updatedAt = new Date().toISOString()
+    // 將一些 pending 任務變成 running
+    pendingTasks.slice(0, 2).forEach((task: CrawlTask) => {
+      task.status = 'running'
     })
 
-    // 將一些 processing 任務隨機完成或失敗
-    processingTasks.slice(0, 2).forEach(task => {
-      task.status = Math.random() > 0.3 ? 'completed' : 'failed'
-      task.updatedAt = new Date().toISOString()
+    // 將一些 running 任務隨機完成或失敗
+    runningTasks.slice(0, 2).forEach((task: CrawlTask) => {
+      task.status = Math.random() > 0.3 ? 'done' : 'failed'
+      task.finished_at = new Date().toISOString()
+      if (task.status === 'done') {
+        task.item_count = Math.floor(Math.random() * 100) + 1
+      }
     })
 
     console.log('已模擬任務狀態變化')
@@ -161,8 +133,8 @@ export const useMockData = async () => {
     clearData,
     addMockTask,
     simulateStatusChanges,
-    generateMockLinkTask,
-    generateMockLinkTasks
+    generateMockCrawlTask,
+    generateMockCrawlTasks
   }
 }
 

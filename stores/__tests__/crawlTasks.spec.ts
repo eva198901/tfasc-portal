@@ -19,6 +19,13 @@ vi.mock('~/composables/useApi', () => ({
 describe('crawlTasks store', () => {
   let store: ReturnType<typeof useCrawlTasksStore>
 
+  const listResponse = (tasks: CrawlTask[], page = 1, pageSize = 10, total?: number) => ({
+    tasks,
+    total: total ?? tasks.length,
+    page,
+    pageSize,
+  })
+
   const mockTasks: CrawlTask[] = [
     {
       id: 1,
@@ -105,22 +112,22 @@ describe('crawlTasks store', () => {
   describe('actions', () => {
     describe('fetchTasks', () => {
       it('fetches tasks successfully', async () => {
-        mockApiGet.mockResolvedValue(mockTasks)
+        mockApiGet.mockResolvedValue(listResponse(mockTasks))
 
         await store.fetchTasks()
 
-        expect(mockApiGet).toHaveBeenCalledWith('/crawl-tasks')
+        expect(mockApiGet).toHaveBeenCalledWith('/crawl-tasks/?page=1&pageSize=10')
         expect(store.tasks).toEqual(mockTasks)
         expect(store.loading).toBe(false)
         expect(store.error).toBe(null)
       })
 
       it('handles fetch tasks with parameters', async () => {
-        mockApiGet.mockResolvedValue(mockTasks)
+        mockApiGet.mockResolvedValue(listResponse(mockTasks, 3, 20, 100))
 
-        await store.fetchTasks({ skip: 10, limit: 20 })
+        await store.fetchTasks(3, 20) // page 3, pageSize 20
 
-        expect(mockApiGet).toHaveBeenCalledWith('/crawl-tasks?skip=10&limit=20')
+        expect(mockApiGet).toHaveBeenCalledWith('/crawl-tasks/?page=3&pageSize=20')
       })
 
       it('handles fetch tasks error', async () => {
@@ -143,8 +150,8 @@ describe('crawlTasks store', () => {
 
         const result = await store.createTask('https://tfasc.com.tw/BidTender/new')
 
-        expect(mockApiPost).toHaveBeenCalledWith('/crawl-tasks', {
-          url: 'https://tfasc.com.tw/BidTender/new'
+        expect(mockApiPost).toHaveBeenCalledWith('/crawl-tasks/', {
+          url: 'https://tfasc.com.tw/BidTender/new',
         })
         expect(result).toEqual(newTask)
         expect(store.tasks[0]).toEqual(newTask)
@@ -208,7 +215,8 @@ describe('crawlTasks store', () => {
 
         await store.getTask(2)
 
-        expect(store.tasks).toContain(newTask)
+        expect(store.tasks.map((t) => t.id)).toContain(2)
+        expect(store.tasks.find((t) => t.id === 2)?.url).toBe(newTask.url)
       })
     })
 
