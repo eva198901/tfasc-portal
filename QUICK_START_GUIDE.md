@@ -155,6 +155,20 @@ pnpm install
 - 後端預設 8000 端口
 - 可在 `server/config.py` 和 `nuxt.config.ts` 中修改
 
+### Q: IPC connection closed（Nuxt／vite-node）？
+
+此為 **Nuxt 開發模式** 下 Vite 與子程序通訊中斷（子程序崩潰、HMR WebSocket 斷線、或 DevTools 干擾等），**不一定是** `/crawl-tasks-demo` 頁面程式錯誤。
+
+建議依序嘗試：
+
+1. **完全重啟 dev**：終端機 `Ctrl+C` 結束後再執行 `pnpm run dev`；確認沒有第二個佔用 `3000` 的殘留 Node 程序。  
+2. **清快取**：在專案根目錄執行 `rm -rf .nuxt node_modules/.vite` 後再 `pnpm install`（若需要）與 `pnpm run dev`。  
+3. **暫時關閉 Nuxt DevTools**（常可緩解不穩）：  
+   `NUXT_DEVTOOLS=false pnpm run dev`  
+4. **與設定一致開網址**：`nuxt.config.ts` 預設開發主機為 `127.0.0.1` 時，請優先開 **http://127.0.0.1:3000/crawl-tasks-demo**（與 `localhost` 多數情況相同，但若遇 HMR 問題可改試此 URL）。  
+5. **需要區網存取時**：改設 `NUXT_DEV_HOST=0.0.0.0` 並可搭配 `NUXT_VITE_HMR_HOST=<你的區網 IP>`，否則維持預設即可。  
+6. **仍頻繁發生**：升級專案 `nuxt` 至目前主線 3.x 最新版，或提高 Node 記憶體上限（例如 `export NODE_OPTIONS=--max-old-space-size=6144` 後再 `pnpm dev`）。
+
 ---
 
 ## 📚 更多資源

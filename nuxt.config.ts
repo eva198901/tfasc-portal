@@ -1,7 +1,15 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2025-05-15',
-  devtools: { enabled: import.meta.dev },
+  // 開發時若出現 vite-node「IPC connection closed」，可先設 NUXT_DEVTOOLS=false 再 pnpm dev
+  devtools: {
+    enabled: import.meta.dev && process.env.NUXT_DEVTOOLS !== 'false',
+  },
+
+  // 固定綁定本機 loopback，減少 IPv6／主機名與 HMR WebSocket 不一致導致的連線中斷（macOS 常見）
+  devServer: {
+    host: process.env.NUXT_DEV_HOST || '127.0.0.1',
+  },
   
   css: [
     '~/assets/css/main.css',
@@ -73,6 +81,12 @@ export default defineNuxtConfig({
     },
     // 開發模式下的 API 代理設定（解決 CORS 問題）- v0.4.3
     server: {
+      hmr: {
+        host: process.env.NUXT_VITE_HMR_HOST || '127.0.0.1',
+      },
+      watch: {
+        ignored: ['**/.git/**'],
+      },
       proxy: {
         '/api': {
           target: 'http://localhost:8000',

@@ -54,10 +54,12 @@ pnpm run dev
 ```
 
 ### 訪問地址
-- 🎨 **前端應用**: http://localhost:3000
+- 🎨 **前端應用**: http://localhost:3000（開發預設綁定 `127.0.0.1` 時亦可使用 http://127.0.0.1:3000）
 - 🔧 **後端 API**: http://localhost:8000
 - 📚 **API 文件**: http://localhost:8000/docs
 - 🧪 **示範頁面**: http://localhost:3000/crawl-tasks-demo
+
+若開發模式出現 **`IPC connection closed`**（Nuxt／Vite），請見 [QUICK_START_GUIDE.md 常見問題](./QUICK_START_GUIDE.md#q-ipc-connection-closednuxtvite-node）。
 
 ---
 
