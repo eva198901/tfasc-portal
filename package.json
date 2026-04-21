@@ -12,6 +12,7 @@
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
+    "dev:stable": "CHOKIDAR_USEPOLLING=1 WATCHPACK_POLLING=true NUXT_VITE_POLL=1 nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",

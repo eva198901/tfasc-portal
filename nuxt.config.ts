@@ -85,7 +85,10 @@ export default defineNuxtConfig({
         host: process.env.NUXT_VITE_HMR_HOST || '127.0.0.1',
       },
       watch: {
-        ignored: ['**/.git/**'],
+        ignored: ['**/.git/**', '**/node_modules/**', '**/.output/**'],
+        // macOS 若出現 EMFILE: too many open files，可設 NUXT_VITE_POLL=1 改用輪詢（較吃 CPU）
+        usePolling: process.env.NUXT_VITE_POLL === '1',
+        interval: process.env.NUXT_VITE_POLL === '1' ? 1000 : undefined,
       },
       proxy: {
         '/api': {
